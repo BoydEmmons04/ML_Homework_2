@@ -9,7 +9,7 @@
 # - Train via either:
 #     (A) Closed-form Normal Equation (requires your own matrix ops), or
 #     (B) Gradient Descent (batch) with your own math helpers.
-# - Evaluate with MSE and R^2.
+# - Evaluate with MSE and R^2
 # - (Optional) k-fold CV, standardization, polynomial features, residual plots.
 # - Keep everything in this single file.
 # -----------------------------------------------------------------------------
@@ -46,7 +46,38 @@
 #   - Return:
 #       X_raw: list of lists (rows x features)
 #       y_raw: list (rows,)
-#       feature_names: list of str (exclude target)
+#       feature_names: list of str (excluding target)
+
+def load_boston_txt(file_path):
+    with open(file_path, 'r') as f:
+        lines = f.readlines()
+
+    data_start = None
+    for i, line in enumerate(lines):
+        if line.strip() and (line.strip()[0].isdigit() or line.strip()[0] == '.'):
+            data_start = i
+            break
+
+    if data_start is None:
+        raise ValueError("No data found in the file.")
+
+    data_lines = lines[data_start:]
+
+    data = []
+    row = []
+    for line in data_lines:
+        try:
+            values = [float(x) for x in line.strip().split() if x]
+        except ValueError:
+            continue  # Skip lines that can't be converted
+        if values:
+            row.extend(values)
+            # Boston dataset: 14 columns per row
+            while len(row) >= 14:
+                data.append(row[:14])
+                row = row[14:]
+
+    return data
 
 
 # =========================
@@ -213,6 +244,13 @@
 #   - Implement standard "if __name__ == '__main__':" guard
 #   - Parse args, run the workflow, catch exceptions, exit with code != 0 on error
 #   - Keep logs/prints concise and clearly labeled
+
+def main():
+    data = load_boston_txt('boston.txt')
+    print (data[0:5])  # Print first 5 rows for verification
+
+if __name__ == '__main__':
+    main()
 
 
 # =========================
