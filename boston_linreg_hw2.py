@@ -247,7 +247,15 @@ def load_boston_txt(file_path):
 
 def main():
     data = load_boston_txt('boston.txt')
-    print (data[0:5])  # Print first 5 rows for verification
+
+    # Everything under this row is just for verification and should be removed later
+    feature_names = [
+        'CRIM', 'ZN', 'INDUS', 'CHAS', 'NOX', 'RM', 'AGE', 'DIS',
+        'RAD', 'TAX', 'PTRATIO', 'B', 'LSTAT', 'MEDV'
+    ]
+    print('\t'.join(feature_names))
+    for row in data[0:500]:  # Print first 5 rows
+        print('\t'.join(f"{v:.2f}" for v in row))
 
 if __name__ == '__main__':
     main()
