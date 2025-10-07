@@ -1,37 +1,12 @@
 # boston_linreg_hw2.py
 # -----------------------------------------------------------------------------
-# SINGLE-FILE PROJECT SCAFFOLD (COMMENTS-ONLY) — NO THIRD-PARTY ML LIBRARIES
-# Copy/paste this into your file and fill in each TODO with your own code.
+# Linear Regression HW 2 
 # -----------------------------------------------------------------------------
-# GOALS
-# - Load a tabular dataset (CSV).
-# - Implement linear regression FROM SCRATCH (no numpy/scikit-learn).
-# - Train via either:
-#     (A) Closed-form Normal Equation (requires your own matrix ops), or
-#     (B) Gradient Descent (batch) with your own math helpers).
-# - Evaluate with MSE and R^2
-# - (Optional) k-fold CV, standardization, polynomial features, residual plots.
-# - Keep everything in this single file.
+# Names : Boyd Emmons, Carter Ward 
+# Date : Oct 7 2025
+# Purpose : Predict the output using multivarable linear Regression
+#           given an input and training data.
 # -----------------------------------------------------------------------------
-
-# =========================
-# 0) RUNTIME/CLI OVERVIEW
-# =========================
-# TODO: Add argparse to accept:
-#   --data PATH_TO_CSV
-#   --target TARGET_COLUMN_NAME (default: MEDV or as needed)
-#   --model ols|gd (closed-form vs gradient-descent)
-#   --alpha FLOAT (learning rate for GD; default e.g. 0.01)
-#   --epochs INT (for GD; default e.g. 5000)
-#   --test-size FLOAT (e.g., 0.2)
-#   --standardize (flag to z-score features using training stats)
-#   --poly-degree INT (1 = no expansion; 2+ = add polynomial terms)
-#   --cv INT (0 = no CV; k >= 2 = k-fold CV on train)
-#   --seed INT (for reproducibility)
-#   --no-plots (optional; skip residual/diagnostic plots)
-#   --outdir PATH (where to save any figures/metrics)
-#
-# NOTE: Do not implement here yet; just reserve the structure above for later.
 
 
 # =========================
