@@ -8,13 +8,11 @@
 # - Implement linear regression FROM SCRATCH (no numpy/scikit-learn).
 # - Train via either:
 #     (A) Closed-form Normal Equation (requires your own matrix ops), or
-#     (B) Gradient Descent (batch) with your own math helpers.
+#     (B) Gradient Descent (batch) with your own math helpers).
 # - Evaluate with MSE and R^2
 # - (Optional) k-fold CV, standardization, polynomial features, residual plots.
 # - Keep everything in this single file.
 # -----------------------------------------------------------------------------
-
-#Comment!!!!
 
 # =========================
 # 0) RUNTIME/CLI OVERVIEW
@@ -110,6 +108,42 @@ def load_boston_txt(file_path):
 #   - Compute means/stds on X_train columns only.
 #   - Apply those stats to transform BOTH X_train and X_test.
 
+# ---- Implemented: feature normalization + bias helper ----
+
+def mean(vals):
+    s, n = 0.0, 0
+    for v in vals:
+        s += v; n += 1
+    return s / n if n else 0.0
+
+def stdev(vals):
+    m = mean(vals)
+    s, n = 0.0, 0
+    for v in vals:
+        d = v - m
+        s += d * d
+        n += 1
+    return (s / n) ** 0.5 if n else 0.0  # population stdev
+
+def fit_standardizer(X_cols):
+    """Given columns (each a list[float]), return (means, stds)."""
+    mus  = [mean(col) for col in X_cols]
+    sigs = [stdev(col) for col in X_cols]
+    # Guard: avoid divide-by-zero
+    sigs = [s if s != 0.0 else 1.0 for s in sigs]
+    return mus, sigs
+
+def apply_standardizer(X_rows, mus, sigs):
+    """Apply z-score using provided train stats."""
+    Z = []
+    for r in X_rows:
+        Z.append([(r[j] - mus[j]) / sigs[j] for j in range(len(r))])
+    return Z
+
+def add_bias_column(X_rows):
+    """Prepend a 1.0 bias to each row."""
+    return [[1.0] + row for row in X_rows]
+
 
 # =========================
 # 4) LINEAR ALGEBRA BUILDING BLOCKS (NO NUMPY)
@@ -159,6 +193,41 @@ def load_boston_txt(file_path):
 #       * (Optional) Track train MSE each epoch; early stop if improvement < tol
 #   - Return learned weights w
 
+# ---- Implemented: Part 1 (2a) GD using your prior update formulas ----
+# Model for this step: MEDV ~ AGE_z + TAX_z
+# prediction = theta0 + theta1*AGE_z + theta2*TAX_z
+def gradient_descent_two_feature(X_rows, y, alpha=0.01, iterations=5000):
+    """
+    X_rows: list[[age_z, tax_z]] (already standardized with train stats)
+    y     : list[MEDV]
+    Updates mirror the previous 1-feature project:
+        theta0 -= alpha*(1/m)*sum(error)
+        theta1 -= alpha*(1/m)*sum(error * age_z)
+        theta2 -= alpha*(1/m)*sum(error * tax_z)
+    """
+    theta0, theta1, theta2 = 0.0, 0.0, 0.0
+    m = len(X_rows)
+    if m == 0:
+        return theta0, theta1, theta2
+
+    for _ in range(iterations):
+        sum_e0 = 0.0
+        sum_e1 = 0.0
+        sum_e2 = 0.0
+        for i in range(m):
+            age_z, tax_z = X_rows[i][0], X_rows[i][1]
+            pred = theta0 + theta1 * age_z + theta2 * tax_z
+            err  = pred - y[i]
+            sum_e0 += err
+            sum_e1 += err * age_z
+            sum_e2 += err * tax_z
+        inv_m = 1.0 / m
+        theta0 -= alpha * inv_m * sum_e0
+        theta1 -= alpha * inv_m * sum_e1
+        theta2 -= alpha * inv_m * sum_e2
+
+    return theta0, theta1, theta2
+
 
 # =========================
 # 6) PREDICTION & LOSS FUNCTIONS
@@ -167,6 +236,21 @@ def load_boston_txt(file_path):
 #   - predict(X_b, w) -> list[float]
 #   - mse(y_true, y_pred) -> float
 #   - r2(y_true, y_pred) -> float   (1 - SS_res/SS_tot; handle zero-variance y)
+
+# ---- Implemented: minimal helpers used by Part 1 (2a) ----
+def predict_rows_two_feature(X_rows, theta0, theta1, theta2):
+    """X_rows are [[age_z, tax_z], ...]."""
+    return [theta0 + theta1 * r[0] + theta2 * r[1] for r in X_rows]
+
+def mse(y_true, y_pred):
+    n = len(y_true)
+    if n == 0:
+        return 0.0
+    s = 0.0
+    for i in range(n):
+        d = y_pred[i] - y_true[i]
+        s += d * d
+    return s / n
 
 
 # =========================
@@ -182,6 +266,43 @@ def load_boston_txt(file_path):
 #   - If --model == 'ols': use normal equation path
 #   - If --model == 'gd' : use gradient descent path with (--alpha, --epochs)
 #   - Store final weights
+
+# (Optional helper for this assignment step; not invoked by main)
+def run_part1_2a_demo():
+    """
+    Uses: AGE (idx 6), TAX (idx 9), MEDV (idx 13).
+    Train = first N-50 rows; Validation = last 50 rows.
+    Standardize AGE,TAX on train stats; apply to both splits; run GD (2a).
+    """
+    data = load_boston_txt('boston.txt')
+    AGE_IDX, TAX_IDX, MEDV_IDX = 6, 9, 13
+    N = len(data)
+    train_rows = data[:N-50]
+    val_rows   = data[N-50:]
+
+    X_train = [[r[AGE_IDX], r[TAX_IDX]] for r in train_rows]
+    y_train = [r[MEDV_IDX] for r in train_rows]
+    X_val   = [[r[AGE_IDX], r[TAX_IDX]] for r in val_rows]
+    y_val   = [r[MEDV_IDX] for r in val_rows]
+
+    # Fit standardizer on TRAIN columns only
+    cols_train = [list(col) for col in zip(*X_train)]  # [AGE_col, TAX_col]
+    mus, sigs = fit_standardizer(cols_train)
+    X_train_z = apply_standardizer(X_train, mus, sigs)
+    X_val_z   = apply_standardizer(X_val, mus, sigs)
+
+    # Part 1 (2a) GD
+    theta0, theta1, theta2 = gradient_descent_two_feature(
+        X_train_z, y_train, alpha=0.01, iterations=5000
+    )
+
+    # Validation MSE
+    y_val_pred = predict_rows_two_feature(X_val_z, theta0, theta1, theta2)
+    val_mse = mse(y_val, y_val_pred)
+
+    print("Part 1 (2a) — GD with z-score(AGE, TAX)")
+    print(f"Theta: θ0={theta0:.6f}, θ1(AGE)={theta1:.6f}, θ2(TAX)={theta2:.6f}")
+    print(f"Validation MSE (last 50 rows): {val_mse:.6f}")
 
 
 # =========================
