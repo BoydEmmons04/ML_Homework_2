@@ -1,0 +1,13 @@
+Part-1 (Gradient Descent)
+Case 2a: MEDV ~ AGE_z + TAX_z (bias first)
+theta_gd_2a = [22.94100877, -1.52352475, -3.65217659]
+MSE_val_2a_gd = 22.04601584
+
+Case 2b: MEDV ~ ALL_FEATURES_z (bias first)
+theta_gd_2b = [22.94100877, -0.94433925, 1.18948671, 0.21422650, 0.66933111, -2.10186451, 2.75524898, 0.30541296, -3.12321116, 2.95812847, -2.44758159, -2.00552763, 0.89755330, -4.05207527]
+MSE_val_2b_gd = 10.94781194
+
+Part-2 (Normal Equation)
+Case 2a: MEDV ~ [1, AGE, TAX] (UNSCALED)
+theta_ne_2a = [35.44716240, -0.05268839, -0.02300722]
+MSE_val_2a_ne = 22.04601584
